@@ -1,0 +1,24 @@
+#!/bin/bash
+
+if [ ! -d /sys/class/gpio/gpio2 ]; then echo 2 > /sys/class/gpio/export; fi
+if [ ! -d /sys/class/gpio/gpio67 ]; then echo 67 > /sys/class/gpio/export; fi
+if [ ! -d /sys/class/gpio/gpio68 ]; then echo 68 > /sys/class/gpio/export; fi
+if [ ! -d /sys/class/gpio/gpio66 ]; then echo 66 > /sys/class/gpio/export; fi
+if [ ! -d /sys/class/gpio/gpio69 ]; then echo 69 > /sys/class/gpio/export; fi
+if [ ! -d /sys/class/gpio/gpio75 ]; then echo 75 > /sys/class/gpio/export; fi
+
+echo out > /sys/class/gpio/gpio2/direction
+echo out > /sys/class/gpio/gpio67/direction
+echo out > /sys/class/gpio/gpio68/direction
+echo out > /sys/class/gpio/gpio66/direction
+echo out > /sys/class/gpio/gpio69/direction
+echo out > /sys/class/gpio/gpio75/direction
+echo 0 > /sys/class/gpio/gpio2/value
+echo 0 > /sys/class/gpio/gpio67/value
+echo 0 > /sys/class/gpio/gpio68/value
+echo 0 > /sys/class/gpio/gpio66/value
+echo 0 > /sys/class/gpio/gpio69/value
+echo 0 > /sys/class/gpio/gpio75/value
+
+#echo in > /sys/class/gpio/gpio74/direction
+#echo rising > /sys/class/gpio/gpio74/edge
