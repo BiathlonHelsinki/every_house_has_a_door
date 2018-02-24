@@ -1,8 +1,8 @@
 {
   "name": "card_reader",
   "version": "0.0.1",
-  "description": "Temporary door access",
-  "main": "temporary.js",
+  "description": "Temporary closet access",
+  "main": "twodoor.js",
 
   "dependencies": {
     "freefare": "^0.1.3",
