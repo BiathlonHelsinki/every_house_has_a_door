@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Temporary door access",
   "main": "temporary.js",
+
   "dependencies": {
     "freefare": "^0.1.3",
     "moment": "^2.17.1",
@@ -11,6 +12,7 @@
   },
   "devDependencies": {},
   "scripts": {
+    "dev": "nodemon --trace-warnings",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "John W Fail",
