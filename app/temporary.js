@@ -32,7 +32,8 @@ function get_cached_keys() {
 
 console.log('starting up....')
 
-
+// check every 45 minutes for updated keylist
+setInterval(get_cached_keys, 2700000);
 
 async function unlock() { 
   console.log('removing lockfile if it exists')
@@ -156,6 +157,7 @@ function toggle_led(to,timeout){
      led_ready();
  },timeout);
 }
+
 
 function check_backup(tag_address, securekey) {
   return backup['data'].filter((item) => {
