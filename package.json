@@ -1,12 +1,15 @@
 {
   "name": "card_reader",
   "version": "0.0.1",
-  "description": "Temporary closet access",
-  "main": "twodoor.js",
-
+  "description": "Kuusi Palaa locks",
+  "main": "app/two-door.js",
   "dependencies": {
     "freefare": "^0.1.3",
+    "lockfile": "1.0.3",
+    "log-timestamp": "0.1.2",
     "moment": "^2.17.1",
+    "nfc": "^0.3.3",
+    "node-yaml-config": "0.0.4",
     "request": "^2.79.0",
     "sleep": "^5.1.0"
   },

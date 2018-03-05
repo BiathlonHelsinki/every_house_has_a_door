@@ -16,24 +16,34 @@ exports.initRGB = function(opts) {
       }
     }
   }
-  fs.writeFileSync(config["clk_gpio"], 1);
+  if (fs.existsSync(config["clk_gpio"])) {
+    fs.writeFileSync(config["clk_gpio"], 1);
+  }
   sleep.usleep(20);
   //exports.setColor(0,0,0);
 };
 
 exports.clk = function(){
-  fs.writeFileSync(config["clk_gpio"], 0);
-  sleep.usleep(20);
-  fs.writeFileSync(config["clk_gpio"], 1);
-  sleep.usleep(20);
+  if (fs.existsSync(config["clk_gpio"])) {
+    fs.writeFileSync(config["clk_gpio"], 0);
+    sleep.usleep(20);
+  }
+  if (fs.existsSync(config["clk_gpio"])) {
+    fs.writeFileSync(config["clk_gpio"], 1);
+    sleep.usleep(20);
+  }
 };
 
 exports.sendByte = function(b){
   for(var i = 0; i < 8; i++){
     if((b & 0x80) != 0){
-      fs.writeFileSync(config["data_gpio"], 1);
+      if (fs.existsSync(config["data_gpio"])) {
+        fs.writeFileSync(config["data_gpio"], 1);
+      }
     } else {
-      fs.writeFileSync(config["data_gpio"], 0);
+      if (fs.existsSync(config["data_gpio"])) {
+        fs.writeFileSync(config["data_gpio"], 0);
+      }
     }
     exports.clk();
     b = b << 1;

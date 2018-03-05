@@ -10,7 +10,7 @@ var weblock = require('lockfile');
 var yaml_config = require('node-yaml-config');
 require('log-timestamp');
  
-var config = yaml_config.load('/opt/card_reader/config/config.yml');
+var config = yaml_config.load('./config/config.yml');
  
 
 
