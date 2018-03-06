@@ -10,7 +10,7 @@ var led = require("./rgb_led.js");
 var yaml_config = require('node-yaml-config');
 require('log-timestamp');
 const http = require('http');
-const config = yaml_config.load('./config/config.yml');
+const config = yaml_config.load('/opt/card_reader/config/config.yml');
 let backup = ''
 
 function get_cached_keys() {
@@ -24,10 +24,10 @@ function get_cached_keys() {
     console.log("Cannot connect to get cached keys: " + err)
   })
   .on('response', (res) => {
-    res.pipe(fs.createWriteStream('keys.json'))
+    res.pipe(fs.createWriteStream('/opt/card_reader/keys.json'))
   })
   console.log('loading backup...')
-  backup = JSON.parse(fs.readFileSync('./keys.json', 'utf8'));
+  backup = JSON.parse(fs.readFileSync('/opt/card_reader/keys.json', 'utf8'));
 }
 
 console.log('starting up....')
@@ -83,14 +83,13 @@ function toggle_relay(){
 
 
 function bip(on){
-  if (fs.existsSync(config["clk_gpio"])) {
-    fs.writeFile("/sys/class/gpio/gpio20/value", on, function (err) {
-      if (err) {
-        return logger.log(err);
-      }
-      //logger.log("Beep has switched to: " + on);
-    });
-  }
+  fs.writeFile("/sys/class/gpio/gpio75/value", on, function (err) {
+    if (err) {
+      return logger.log(err);
+    }
+    //logger.log("Beep has switched to: " + on);
+  });
+  
 }
 
 function toggle_bip(duration,callback){
@@ -131,6 +130,7 @@ function led_ready(){
 
 function led_success(){
  //Blue Led
+
  led.setColor(0x00,0x60,0x00);
 }
 
