@@ -12,6 +12,7 @@ require('log-timestamp');
 const http = require('http');
 const config = yaml_config.load('/opt/card_reader/config/config.yml');
 let backup = ''
+const shell = require('shelljs');
 
 function get_cached_keys() {
 
@@ -166,89 +167,96 @@ function check_backup(tag_address, securekey) {
 }
 
 var device = new nfc.NFC();
-device.on('read', function(tag) {
-  if ((!!tag.data) && (!!tag.offset))  {
-    if (tag.type == 68) {
-      var address = tag.data.toString('hex').substring(0,20);
-      var security_code = tag.data.toString('hex').substring(32,40);
-    } else if (tag.type == 4) {
-      var address = tag.data.toString('hex').substring(0,8);
-      var security_code = tag.data.toString('hex').substring(128,160);
-    } else {
-    	console.log('what the fuck this is ' + tag.type);
-    	console.log('data is ' + tag.data.toString('hex'));
-    }
-    var url = 'http://' + config.api + ":" + config.port + '/nfcs/' + address + '/auth_door';
-    weblock.check('webapi.lock', function(error, isLocked) {
-      if (isLocked) {
-        // console.log('not querying API again yet');
-      } else {
-        weblock.lock('webapi.lock', function(er) {
+function kp_card_reader() {
+  try {
+    device.on('read', function(tag) {
+      if ((!!tag.data) && (!!tag.offset))  {
+        if (tag.type == 68) {
+          var address = tag.data.toString('hex').substring(0,20);
+          var security_code = tag.data.toString('hex').substring(32,40);
+        } else if (tag.type == 4) {
+          var address = tag.data.toString('hex').substring(0,8);
+          var security_code = tag.data.toString('hex').substring(128,160);
+        } else {
+        	console.log('what the fuck this is ' + tag.type);
+        	console.log('data is ' + tag.data.toString('hex'));
+        }
+        var url = 'http://' + config.api + ":" + config.port + '/nfcs/' + address + '/auth_door';
+        weblock.check('webapi.lock', function(error, isLocked) {
+          if (isLocked) {
+            // console.log('not querying API again yet');
+          } else {
+            weblock.lock('webapi.lock', function(er) {
 
-          console.log('-----')
-          console.log('tag address is ' + address);
-          request.get({url: url, 
-  	                 json: true, timeout: 3000,
-                     qs: {securekey: security_code },
-                     headers: {"X-Hardware-Name": config.name, "X-Hardware-Token": config.token}
-                   }, function (error, response, body) {
-                        if (response) {
-                    	    if (!error && response.statusCode === 200) {
-                    	      console.log("Opened door for ", response.body.data.name);
-                    	      if (response.body.data) {
-                    		      switch_relay(1);
-                              bip(0);
-                              toggle_bip(500);
-                              led_success();
-                       		    setTimeout(function() {
-                    		        switch_relay(0);
-                    		      }, 4000);
-                             } else {
+              console.log('-----')
+              console.log('tag address is ' + address);
+              request.get({url: url, 
+      	                 json: true, timeout: 3000,
+                         qs: {securekey: security_code },
+                         headers: {"X-Hardware-Name": config.name, "X-Hardware-Token": config.token}
+                       }, function (error, response, body) {
+                            if (response) {
+                        	    if (!error && response.statusCode === 200) {
+                        	      console.log("Opened door for ", response.body.data.name);
+                        	      if (response.body.data) {
+                        		      switch_relay(1);
+                                  bip(0);
+                                  toggle_bip(500);
+                                  led_success();
+                           		    setTimeout(function() {
+                        		        switch_relay(0);
+                        		      }, 4000);
+                                 } else {
+                                    bip_error();
+                                }
+                              }
+                        	    else if (response.statusCode == 401) {
+                                console.log('Unauthorised (check your headers and access tokens)');
+                      	      } else {
+                                console.log("Got an error: ", error, ", status code: ", response.statusCode);
+                              }
+                            } else {
+                              console.log('cannot connect to API, checking backup here')
+                              let is_allowed = check_backup(address, security_code)
+                              if (is_allowed.length === 0) {
+                                console.log('do not allow')
                                 bip_error();
-                            }
-                          }
-                    	    else if (response.statusCode == 401) {
-                            console.log('Unauthorised (check your headers and access tokens)');
-                  	      } else {
-                            console.log("Got an error: ", error, ", status code: ", response.statusCode);
-                          }
-                        } else {
-                          console.log('cannot connect to API, checking backup here')
-                          let is_allowed = check_backup(address, security_code)
-                          if (is_allowed.length === 0) {
-                            console.log('do not allow')
-                            bip_error();
-                          } else {
-                            console.log('allow access for ' + is_allowed[0].attributes.holder_name)
-                            switch_relay(1);
-                            bip(0);
-                            toggle_bip(500);
-                            led_success();
+                              } else {
+                                console.log('allow access for ' + is_allowed[0].attributes.holder_name)
+                                switch_relay(1);
+                                bip(0);
+                                toggle_bip(500);
+                                led_success();
+                                setTimeout(function() {
+                                  switch_relay(0);
+                                }, 4000); 
+                              }
+                            }   
                             setTimeout(function() {
-                              switch_relay(0);
-                            }, 4000); 
+                        	    weblock.unlock('webapi.lock', function(er) { });
+                        	  }, 6000);
                           }
-                        }   
-                        setTimeout(function() {
-                    	    weblock.unlock('webapi.lock', function(er) { });
-                    	  }, 6000);
-                      }
-                    ).on('error', function(err) {
-                        if (err.code === 'EHOSTDOWN' || err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT' || err.code === 'ECONNREFUSED') {
-                          console.log('Host was down, used backup ')
-                        } else {
-                          console.log('unknown error: ' + util.inspect(err))
-                        }
-                      })
-  	    })
+                        ).on('error', function(err) {
+                            if (err.code === 'EHOSTDOWN' || err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT' || err.code === 'ECONNREFUSED') {
+                              console.log('Host was down, used backup ')
+                            } else {
+                              console.log('unknown error: ' + util.inspect(err))
+                            }
+                          })
+      	    })
+          }
+        })
       }
-    })
+    }).start();
+  } catch (err) {
+    if (err == 'Error: unable open NFC device')
+      console.log('Cardreader died, resetting USB bus...')
+      shell.exec('./scripts/resetusb')
+      setTimeout(kp_card_reader, 2000)
   }
-}).on('error', function(err) {
-  console.log('THIS SHOULD RESTART OR REBOOT OR SOMETHING')
-}).start()
-	
+}
 
-bip(0);
-led_error();
+kp_card_reader()
+// bip(0);
+// led_error();
 
